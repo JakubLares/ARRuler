@@ -15,6 +15,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     @IBOutlet var sceneView: ARSCNView!
 
     var dotNodes = [SCNNode]()
+    var textNode = SCNNode()
 
     //MARK: - Lifecycle
     
@@ -40,9 +41,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     //MARK: - Touches
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if dotNodes.count >= 2 {
+            restartMeasure()
+        }
         guard let touchLocation = touches.first?.location(in: sceneView),
         let hitResult = sceneView.hitTest(touchLocation, types: .featurePoint).first else { return }
         addDot(at: hitResult)
+    }
+
+    override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        restartMeasure()
     }
 
     //MARK: - Private methods
@@ -80,9 +88,17 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     private func updateText(_ text: String, atPosition position: SCNVector3) {
         let textGeometry = SCNText(string: text, extrusionDepth: 1)
         textGeometry.firstMaterial?.diffuse.contents = UIColor.red
-        let textNode = SCNNode(geometry: textGeometry)
+        textNode.geometry = textGeometry
         textNode.position = SCNVector3(position.x, position.y + 0.01, position.z)
         textNode.scale = SCNVector3(0.01, 0.01, 0.01)
         sceneView.scene.rootNode.addChildNode(textNode)
+    }
+
+    private func restartMeasure() {
+        dotNodes.forEach {
+            $0.removeFromParentNode()
+        }
+        dotNodes.removeAll()
+        textNode.removeFromParentNode()
     }
 }
